@@ -1,0 +1,38 @@
+version: 2
+jobs:
+  build_upload:
+    docker:
+      - image: docker:stable
+    working_directory: /root/working_directory
+    steps:
+      - run: apk add --no-cache git openssh
+      - checkout
+      - setup_remote_docker:
+          version: 17.07.0-ce
+      - run: |
+          git config --global --replace-all versionsort.prereleasesuffix ".alpha"
+          git config --global --add versionsort.prereleasesuffix ".beta"
+      - run: |
+          TAG=${CIRCLE_TAG#v}
+          BRANCH=${TAG/%.*/.x}
+          VERSION=${TAG}
+          LATEST=$(git tag --sort=-version:refname | head -n 1)
+          PARENT_TAG=$(git ls-remote --tags https://github.com/Misenko/bio-class.git | grep -v '{' | cut -d '/' -f 3 | sort -r | head -n 1)
+          PARENT_VERSION=${PARENT_TAG#v}
+          docker login -u $DOCKER_USER -p $DOCKER_PASS
+          docker build --build-arg branch=$BRANCH --build-arg version="$VERSION" --build-arg parent_version="$PARENT_VERSION" -t $DOCKERHUB_ORGANIZATION/$CIRCLE_PROJECT_REPONAME:$TAG ./$DOCKERFILE_DIR
+          docker push $DOCKERHUB_ORGANIZATION/$CIRCLE_PROJECT_REPONAME:$TAG
+          if [ "$LATEST" == "$CIRCLE_TAG" ]; then
+            docker tag $DOCKERHUB_ORGANIZATION/$CIRCLE_PROJECT_REPONAME:$TAG $DOCKERHUB_ORGANIZATION/$CIRCLE_PROJECT_REPONAME:latest
+            docker push $DOCKERHUB_ORGANIZATION/$CIRCLE_PROJECT_REPONAME:latest
+          fi
+workflows:
+  version: 2
+  release-docker-images:
+    jobs:
+      - build_upload:
+          filters:
+            tags:
+              only: /v.*/
+            branches:
+              ignore: /.*/
