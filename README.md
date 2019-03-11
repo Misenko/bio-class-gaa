@@ -5,6 +5,7 @@ Dockerfile for building virtual classroom for biology students - Genomics: algor
 This image is intended for Genomics: algorithms and analysis class tought at Institute of Molecular Genetics of the ASCR, v. v. i.
 
 ## Software
+* BCFtools
 * BLAST++
 * Bowtie
 * BWA
@@ -13,13 +14,14 @@ This image is intended for Genomics: algorithms and analysis class tought at Ins
 * FastA
 * FastQC
 * FastX
+* HTSlib
 * Miniasm
 * Minimap2
 * MIRA
 * Racon
 * RStudio Desktop + Server
 * samtools
-* SRA Toolkit
+* SOAPdenovo2
 * Trimmomatic
 
 ## Image
